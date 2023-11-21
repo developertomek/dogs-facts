@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FactsService } from '../services/facts.service';
-import { Fact } from '../interfaces/Fact.interface';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { DogImg, Fact } from '../interfaces/Fact.interface';
+import { Observable, catchError, ignoreElements, of } from 'rxjs';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div
-      class="pt-16 m-auto w-full flex justify-between flex-wrap items-center min-h-fit"
+      class="pt-28 m-auto w-full flex justify-between flex-wrap items-center min-h-fit"
     >
       <div class="text-white w-full sm:w-1/2">
         <h1 class="text-4xl mb-4 font-semibold">
@@ -22,34 +23,55 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
           furry companions so special!
         </h2>
         <button
-          (click)="generateOneAndScroll(generated)"
-          class="px-8 bg-green-400 rounded-md text-black leading-9 w-full hover:scale-105 transition-all"
+          (click)="generateOneAndScroll(content)"
+          class="px-8 bg-green-400 rounded-md text-black leading-9 w-full hover:scale-105 transition-all disabled:bg-secondary disabled:hover:scale-100 disabled:text-primary"
+          [disabled]="generated()"
         >
           Generate
         </button>
       </div>
       <img src="./assets/dog.svg" class="w-72 mx-auto mt-8" />
     </div>
-    <div #generated class="mt-16">
+
+    <div #content class="mt-16">
+      @if (generated()) {
       <div class="h-80 flex items-center">
         @if (fact$ | async; as data) {
-        <div class="text-white mx-auto">
-          {{ data.facts[0] }}
+        <div class="text-white mx-auto text-center">
+          <div class="mb-4">{{ data[0].facts[0] }}</div>
+          <img
+            src="{{ data[1].message }}"
+            class="mx-auto mb-8 max-h-96 max-w-96 block"
+          />
+          <button class="hover:scale-105 transition-all" routerLink="/random">
+            <a
+              routerLink="/random-facts"
+              class="text-black py-2 px-8 bg-green-400 rounded-md"
+              >Want more?</a
+            >
+          </button>
+        </div>
+        } @else { @if (error$ | async; as error) {
+        <div class="text-red-500 text-2xl mx-auto">
+          {{ error }}
         </div>
         } @else {
-        <div class="text-red-500 text-2xl mx-auto">
-          {{ errorMessage }}
-        </div>
-        }
+        <img
+          class="animate-spin h-6 w-6 mx-auto"
+          src="./../../assets/loader.svg"
+        />
+        }}
       </div>
+      }
     </div>
   `,
 })
 export class HomeComponent {
   errorMessage: string =
     'Server Error. Please refresh the page or try again later.';
-
-  fact$!: Observable<Fact>;
+  error$!: Observable<string>;
+  fact$!: Observable<[Fact, DogImg]>;
+  generated = signal<boolean>(false);
 
   constructor(private facts: FactsService) {}
 
@@ -59,6 +81,11 @@ export class HomeComponent {
   }
 
   generateOne(): void {
+    this.generated.set(true);
     this.fact$ = this.facts.getOne();
+    this.error$ = this.fact$.pipe(
+      ignoreElements(),
+      catchError(() => of(this.errorMessage))
+    );
   }
 }
