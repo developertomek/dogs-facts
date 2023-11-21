@@ -19,7 +19,9 @@ export class FactsService {
   }
 
   getFacts(num: number): Observable<Fact> {
-    return this.http.get<Fact>(`${this.API_FACTS_URL}?number=${num}`);
+    return this.http
+      .get<Fact>(`${this.API_FACTS_URL}?number=${num}`)
+      .pipe(shareReplay());
   }
 
   private getRandomImg(num: number): Observable<DogImg> {
