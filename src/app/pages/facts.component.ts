@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FactsService } from '../services/facts.service';
-import { Observable } from 'rxjs';
+import { Observable, catchError, ignoreElements, of } from 'rxjs';
 import { Fact } from '../interfaces/Fact.interface';
 
 @Component({
@@ -36,12 +36,17 @@ import { Fact } from '../interfaces/Fact.interface';
       <li class="mb-4">{{ fact }}</li>
       }
     </ul>
-    }
+    } @else { @if (error$ | async; as error) {
+    <div class="text-red-500 text-2xl mx-auto">
+      {{ error }}
+    </div>
+    }}
   `,
 })
 export class FactsComponent implements OnInit {
   factsNumber!: FormControl<null | string>;
   facts$!: Observable<Fact>;
+  error$!: Observable<string>;
 
   constructor(private facts: FactsService) {}
 
@@ -55,6 +60,10 @@ export class FactsComponent implements OnInit {
   generateFacts(): void {
     if (this.factsNumber.value) {
       this.facts$ = this.facts.getFacts(+this.factsNumber.value);
+      this.error$ = this.facts$.pipe(
+        ignoreElements(),
+        catchError((err: Error) => of(err.message))
+      );
     }
   }
 }
