@@ -18,7 +18,7 @@ export class FactsService {
     );
   }
 
-  private getFacts(num: number): Observable<Fact> {
+  getFacts(num: number): Observable<Fact> {
     return this.http.get<Fact>(`${this.API_FACTS_URL}?number=${num}`);
   }
 
