@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [],
+  imports: [RouterModule],
   template: `
     <div class="flex justify-between max-w-960 m-auto h-16 items-center px-8">
       <a
@@ -12,7 +13,7 @@ import { Component } from '@angular/core';
         >Doggo</a
       >
       <button class="hover:scale-105 transition-all">
-        <a routerLink="/" class="py-2 px-8 bg-green-400 rounded-md"
+        <a routerLink="/random-facts" class="py-2 px-8 bg-green-400 rounded-md"
           >Want more?</a
         >
       </button>
